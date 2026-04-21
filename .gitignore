@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+dolos_dashboard/venv/
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Data and raw media
+dolos-dataset/videos/
+real-life-trial/videos/
+dolos-dataset/*.zip
+
+# Generated pipeline outputs
+working/features/
+working/openface_raw/
+working/models/
+working/xai/
+tmp/
+
+# Large local installers
+*.exe

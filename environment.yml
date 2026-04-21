@@ -1,0 +1,26 @@
+# environment.yml — Deception Detection Pipeline
+# Usage: conda env create -f environment.yml && conda activate deception
+name: deception
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - torch
+    - torchvision
+    - librosa
+    - shap
+    - seaborn
+    - tqdm
+    - joblib
+    - scikit-learn
+    - soundfile
+    - pandas
+    - numpy
+    - matplotlib
+    - jupyter
+    - ipykernel
+    - opencv-python-headless
