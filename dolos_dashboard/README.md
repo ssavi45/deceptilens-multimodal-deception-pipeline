@@ -2,7 +2,7 @@
 
 Predict truth/deception from video clips using your trained multimodal ensemble.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 deception_dashboard/
@@ -23,7 +23,7 @@ deception_dashboard/
 
 ---
 
-## 🚀 Step-by-Step Deployment
+##  Step-by-Step Deployment
 
 ### Step 1 — Export Models from Colab
 
@@ -47,7 +47,7 @@ mkdir deception_dashboard && cd deception_dashboard
 
 # 4. Create a virtual environment
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate
 
 # 5. Install dependencies
 pip install -r requirements.txt
@@ -64,34 +64,11 @@ streamlit run app.py
 Open http://localhost:8501 in your browser.
 Upload any .mp4 clip and get instant predictions!
 
----
-
-## ☁️ Deploy to the Cloud (Optional)
-
-### Streamlit Community Cloud (Free)
-1. Push your project to a GitHub repo (include saved_models/ or use Git LFS)
-2. Go to https://share.streamlit.io → Deploy
-3. Set `app.py` as the main file
-
-### Hugging Face Spaces (Free, great for ML)
-1. Create a Space with Streamlit SDK
-2. Push files including saved_models/
-3. Add `requirements.txt` — HF installs automatically
-
-### Railway / Render (Easy hosting)
-```bash
-# Add a Procfile
-echo "web: streamlit run app.py --server.port $PORT --server.address 0.0.0.0" > Procfile
-```
-Then connect your GitHub repo.
-
----
-
-## 🧠 Model Performance
+## Model Performance
 
 | Model                    | Accuracy  |
 |--------------------------|-----------|
-| PyTorch Dual-Stream ⭐    | **82.11%** |
+| PyTorch Dual-Stream      | **82.11%** |
 | SVM                      | 79.82%    |
 | HistGradientBoosting     | 74.77%    |
 | Hard Voting Ensemble     | 79.82%    |
@@ -102,12 +79,12 @@ and shows all 4 model scores for transparency.
 
 ---
 
-## ⚡ Inference Time
+## Inference Time
 - First run: ~60s (downloads face_landmarker.task ~30MB)
 - Subsequent runs: ~15–40s depending on video length and hardware
 - GPU: 3–10s
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 **`saved_models/ not found`** — Run the Colab export cell first and download the folder.
 

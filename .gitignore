@@ -30,3 +30,6 @@ tmp/
 
 # Large local installers
 *.exe
+
+# Local documents
+CSE 499B paper.pdf

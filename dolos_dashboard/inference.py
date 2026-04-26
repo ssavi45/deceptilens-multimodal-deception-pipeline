@@ -19,6 +19,61 @@ warnings.filterwarnings("ignore")
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+MEDIAPIPE_BLENDSHAPE_NAMES = [
+    "browDownLeft",
+    "browDownRight",
+    "browInnerUp",
+    "browOuterUpLeft",
+    "browOuterUpRight",
+    "cheekPuff",
+    "cheekSquintLeft",
+    "cheekSquintRight",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookDownLeft",
+    "eyeLookDownRight",
+    "eyeLookInLeft",
+    "eyeLookInRight",
+    "eyeLookOutLeft",
+    "eyeLookOutRight",
+    "eyeLookUpLeft",
+    "eyeLookUpRight",
+    "eyeSquintLeft",
+    "eyeSquintRight",
+    "eyeWideLeft",
+    "eyeWideRight",
+    "jawForward",
+    "jawLeft",
+    "jawOpen",
+    "jawRight",
+    "mouthClose",
+    "mouthDimpleLeft",
+    "mouthDimpleRight",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthFunnel",
+    "mouthLeft",
+    "mouthLowerDownLeft",
+    "mouthLowerDownRight",
+    "mouthPressLeft",
+    "mouthPressRight",
+    "mouthPucker",
+    "mouthRight",
+    "mouthRollLower",
+    "mouthRollUpper",
+    "mouthShrugLower",
+    "mouthShrugUpper",
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "mouthStretchLeft",
+    "mouthStretchRight",
+    "mouthUpperUpLeft",
+    "mouthUpperUpRight",
+    "noseSneerLeft",
+    "noseSneerRight",
+    "tongueOut",
+]
+
 # ─────────────────────────────────────────────
 # 1.  PyTorch Model Architecture (must match notebook exactly)
 # ─────────────────────────────────────────────
@@ -219,6 +274,216 @@ def extract_features(video_path: str) -> np.ndarray:
     return np.array(mp_feats + audio_feats + resnet_feats, dtype=np.float32)
 
 
+def _diagnose_modality(features: np.ndarray, name: str) -> dict:
+    """Summarize extraction quality for a feature slice."""
+    total = int(features.size)
+    nonzero = int(np.count_nonzero(np.abs(features) > 1e-8))
+    nonzero_pct = float((nonzero / total) * 100.0) if total else 0.0
+    all_zero_fallback = nonzero == 0
+    status = "fallback" if all_zero_fallback else "ok"
+    return {
+        "name": name,
+        "total_dims": total,
+        "nonzero_dims": nonzero,
+        "nonzero_pct": nonzero_pct,
+        "all_zero_fallback": all_zero_fallback,
+        "status": status,
+    }
+
+
+def _predict_scores_from_scaled(ensemble: DeceptionEnsemble, scaled: np.ndarray) -> dict:
+    """Run all 4 models on already-scaled features and return deception probabilities."""
+    hgb_p = float(ensemble.hgb.predict_proba(scaled)[0, 1])
+    svm_p = float(ensemble.svm.predict_proba(scaled)[0, 1])
+    rf_p = float(ensemble.rf.predict_proba(scaled)[0, 1])
+
+    v_in = np.concatenate([scaled[:, :104], scaled[:, 138:]], axis=1)
+    a_in = scaled[:, 104:138]
+    v_t = torch.FloatTensor(v_in).to(DEVICE)
+    a_t = torch.FloatTensor(a_in).to(DEVICE)
+
+    ensemble.pt_model.eval()
+    with torch.no_grad():
+        logits = ensemble.pt_model(v_t, a_t)
+        pt_p = float(torch.softmax(logits, dim=1)[0, 1].item())
+
+    return {
+        "PyTorch Dual-Stream (Best)": pt_p,
+        "HistGradientBoosting": hgb_p,
+        "Support Vector Machine": svm_p,
+        "Random Forest": rf_p,
+    }
+
+
+def _ensemble_deception_probability(model_scores: dict) -> float:
+    return float(np.mean(list(model_scores.values())))
+
+
+def _humanize_feature_name(raw_name: str) -> str:
+    """Convert technical feature names to user-facing labels."""
+    if raw_name.startswith("audio_"):
+        idx = int(raw_name.split("_")[1])
+        audio_map = {
+            0: "MFCC mean",
+            1: "MFCC std",
+            2: "RMS energy mean",
+            3: "RMS energy std",
+            4: "Zero-crossing rate mean",
+            5: "Zero-crossing rate std",
+            6: "Spectral centroid mean",
+            7: "Spectral centroid std",
+        }
+        if idx in audio_map:
+            return audio_map[idx]
+        if 8 <= idx <= 20:
+            return f"MFCC coefficient mean #{idx - 7}"
+        if 21 <= idx <= 33:
+            return f"MFCC coefficient std #{idx - 20}"
+        return f"Audio feature #{idx + 1}"
+
+    if raw_name.startswith("mp_mean_"):
+        idx = int(raw_name.split("_")[-1])
+        if 0 <= idx < len(MEDIAPIPE_BLENDSHAPE_NAMES):
+            return f"{MEDIAPIPE_BLENDSHAPE_NAMES[idx]} average intensity"
+        return f"Face blendshape mean #{idx + 1}"
+
+    if raw_name.startswith("mp_std_"):
+        idx = int(raw_name.split("_")[-1])
+        if 0 <= idx < len(MEDIAPIPE_BLENDSHAPE_NAMES):
+            return f"{MEDIAPIPE_BLENDSHAPE_NAMES[idx]} variability"
+        return f"Face blendshape variability #{idx + 1}"
+
+    if raw_name.startswith("resnet_"):
+        idx = int(raw_name.split("_")[1])
+        return f"Visual latent pattern unit #{idx + 1}"
+
+    return raw_name.replace("_", " ").strip().title()
+
+
+def _feature_category(raw_name: str) -> str:
+    if raw_name.startswith("audio_"):
+        return "audio"
+    if raw_name.startswith("mp_mean_") or raw_name.startswith("mp_std_"):
+        return "face"
+    if raw_name.startswith("resnet_"):
+        return "visual_latent"
+    return "other"
+
+
+def _feature_description(raw_name: str) -> str:
+    if raw_name.startswith("audio_"):
+        idx = int(raw_name.split("_")[1])
+        if idx in [0, 1]:
+            return "Overall speech timbre/shape captured by MFCC summary."
+        if idx in [2, 3]:
+            return "Loudness/energy behavior of the clip audio."
+        if idx in [4, 5]:
+            return "How noisy vs tonal the speech signal is over time."
+        if idx in [6, 7]:
+            return "Brightness of the speech spectrum over time."
+        if 8 <= idx <= 33:
+            return "Fine-grained voice spectral pattern component."
+        return "Audio-derived cue from the clip."
+
+    if raw_name.startswith("mp_mean_"):
+        return "Average strength of this facial action across frames."
+
+    if raw_name.startswith("mp_std_"):
+        return "How much this facial action varies over time."
+
+    if raw_name.startswith("resnet_"):
+        return (
+            "Latent CNN visual unit (not directly human-named); represents a compressed visual pattern "
+            "from sampled video frames."
+        )
+
+    return "Derived model feature."
+
+
+def _compute_local_xai(
+    ensemble: DeceptionEnsemble,
+    scaled: np.ndarray,
+    feature_names: list,
+    base_ensemble_prob: float,
+    candidate_top_n: int = 40,
+    return_top_k: int = 10,
+) -> dict:
+    """
+    Local perturbation XAI:
+    mask features to baseline (scaled=0) and measure probability shift.
+    """
+    group_slices = [
+        ("Face expression means", slice(0, 52)),
+        ("Face expression variability", slice(52, 104)),
+        ("Audio summary cues", slice(104, 112)),
+        ("Audio MFCC mean profile", slice(112, 125)),
+        ("Audio MFCC variability", slice(125, 138)),
+        ("Visual frame embeddings", slice(138, 650)),
+    ]
+
+    group_contributions = []
+    for label, s in group_slices:
+        masked = scaled.copy()
+        masked[:, s] = 0.0
+        masked_scores = _predict_scores_from_scaled(ensemble, masked)
+        masked_prob = _ensemble_deception_probability(masked_scores)
+        delta = base_ensemble_prob - masked_prob
+        group_contributions.append(
+            {
+                "group": label,
+                "contribution_pp": float(delta * 100.0),
+                "direction": "deception" if delta > 0 else "truth",
+                "abs_contribution_pp": float(abs(delta) * 100.0),
+            }
+        )
+
+    ranked_indices = np.argsort(np.abs(scaled[0]))[::-1][:candidate_top_n]
+    feature_contributions = []
+    for idx in ranked_indices:
+        masked = scaled.copy()
+        masked[0, idx] = 0.0
+        masked_scores = _predict_scores_from_scaled(ensemble, masked)
+        masked_prob = _ensemble_deception_probability(masked_scores)
+        delta = base_ensemble_prob - masked_prob
+
+        raw_name = (
+            feature_names[idx]
+            if isinstance(feature_names, list) and idx < len(feature_names)
+            else f"feature_{idx}"
+        )
+        feature_contributions.append(
+            {
+                "index": int(idx),
+                "raw_name": raw_name,
+                "feature": _humanize_feature_name(raw_name),
+                "category": _feature_category(raw_name),
+                "description": _feature_description(raw_name),
+                "is_human_interpretable": _feature_category(raw_name) in {"audio", "face"},
+                "z_value": float(scaled[0, idx]),
+                "contribution_pp": float(delta * 100.0),
+                "direction": "deception" if delta > 0 else "truth",
+                "abs_contribution_pp": float(abs(delta) * 100.0),
+            }
+        )
+
+    group_contributions.sort(key=lambda x: x["abs_contribution_pp"], reverse=True)
+    feature_contributions.sort(key=lambda x: x["abs_contribution_pp"], reverse=True)
+    top_human_features = [
+        row for row in feature_contributions if row.get("is_human_interpretable", False)
+    ][:return_top_k]
+    top_latent_features = [
+        row for row in feature_contributions if row.get("category") == "visual_latent"
+    ][:return_top_k]
+
+    return {
+        "method": "Local masking to baseline (scaled=0)",
+        "group_contributions": group_contributions,
+        "top_features": feature_contributions[:return_top_k],
+        "top_human_features": top_human_features,
+        "top_latent_features": top_latent_features,
+    }
+
+
 # ─────────────────────────────────────────────
 # 4.  Prediction
 # ─────────────────────────────────────────────
@@ -237,38 +502,40 @@ def predict(ensemble: DeceptionEnsemble, video_path: str) -> dict:
     """
     # Feature extraction
     raw   = extract_features(video_path).reshape(1, -1)
+    mp_raw = raw[:, :104]
+    audio_raw = raw[:, 104:138]
+    resnet_raw = raw[:, 138:]
+
+    diagnostics = {
+        "mediapipe": _diagnose_modality(mp_raw, "MediaPipe Blendshapes"),
+        "audio": _diagnose_modality(audio_raw, "Librosa Audio"),
+        "resnet": _diagnose_modality(resnet_raw, "ResNet-18 Spatial"),
+    }
+    fallback_modalities = [
+        details["name"]
+        for details in diagnostics.values()
+        if details["all_zero_fallback"]
+    ]
+
     scaled = ensemble.scaler.transform(raw)
 
-    # Sklearn predictions
-    hgb_p = float(ensemble.hgb.predict_proba(scaled)[0, 1])
-    svm_p = float(ensemble.svm.predict_proba(scaled)[0, 1])
-    rf_p  = float(ensemble.rf.predict_proba(scaled)[0, 1])
-
-    # PyTorch prediction
-    v_in = np.concatenate([scaled[:, :104], scaled[:, 138:]], axis=1)
-    a_in = scaled[:, 104:138]
-    v_t  = torch.FloatTensor(v_in).to(DEVICE)
-    a_t  = torch.FloatTensor(a_in).to(DEVICE)
-
-    ensemble.pt_model.eval()
-    with torch.no_grad():
-        logits = ensemble.pt_model(v_t, a_t)
-        pt_p   = float(torch.softmax(logits, dim=1)[0, 1].item())
-
-    # Hard voting (best performer gets double weight via inclusion)
-    votes = {
-        "PyTorch Dual-Stream (Best)": pt_p,
-        "HistGradientBoosting":       hgb_p,
-        "Support Vector Machine":     svm_p,
-        "Random Forest":              rf_p,
-    }
+    # Model predictions
+    votes = _predict_scores_from_scaled(ensemble, scaled)
 
     hard_votes   = {k: int(v >= 0.5) for k, v in votes.items()}
     deception_votes = sum(hard_votes.values())
     final_label  = "Deception" if deception_votes >= 2 else "Truth"
 
     # Ensemble confidence = average probability
-    ensemble_confidence = float(np.mean(list(votes.values())))
+    ensemble_confidence = _ensemble_deception_probability(votes)
+    pt_p = float(votes.get("PyTorch Dual-Stream (Best)", 0.0))
+
+    xai = _compute_local_xai(
+        ensemble=ensemble,
+        scaled=scaled,
+        feature_names=getattr(ensemble, "feature_names", []),
+        base_ensemble_prob=ensemble_confidence,
+    )
 
     return {
         "label":          final_label,
@@ -277,4 +544,7 @@ def predict(ensemble: DeceptionEnsemble, video_path: str) -> dict:
         "model_scores":   votes,
         "hard_votes":     hard_votes,
         "deception_votes": deception_votes,
+        "feature_diagnostics": diagnostics,
+        "fallback_modalities": fallback_modalities,
+        "xai": xai,
     }
