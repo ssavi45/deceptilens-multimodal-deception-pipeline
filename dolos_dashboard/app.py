@@ -1127,6 +1127,9 @@ with workflow_right:
             )
             st.stop()
 
+        if face_check.get("error"):
+            st.warning(f"⚠️ Face validation skipped: {face_check['error']}")
+
         pipeline_slot.markdown(
             pipeline_card("Checking for speech activity", 10), unsafe_allow_html=True
         )
@@ -1150,6 +1153,9 @@ with workflow_right:
                 "interview clips, trial recordings, or statement videos work best."
             )
             st.stop()
+
+        if speech_check.get("error"):
+            st.warning(f"⚠️ Speech validation skipped: {speech_check['error']}")
 
         stages = [
             ("Extracting acoustic features", 20),
