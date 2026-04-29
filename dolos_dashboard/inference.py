@@ -323,9 +323,7 @@ def validate_human_face(video_path: str, min_detection_ratio: float = 0.15) -> d
         )
 
         cap = cv2.VideoCapture(video_path)
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        if frame_count <= 0:
-            cap.release()
+        if not cap.isOpened():
             return {
                 "face_detected": False,
                 "frames_checked": 0,
@@ -333,21 +331,40 @@ def validate_human_face(video_path: str, min_detection_ratio: float = 0.15) -> d
                 "detection_ratio": 0.0,
             }
 
-        sample_indices = set(np.linspace(0, max(0, frame_count - 1), 10, dtype=int))
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        # When frame_count is known, sample 10 evenly spaced frames.
+        # When it's unknown (0 or -1), read sequentially and check every
+        # 30th frame up to a maximum of 10 checks.
+        if frame_count > 0:
+            sample_indices = set(np.linspace(0, max(0, frame_count - 1), 10, dtype=int))
+        else:
+            sample_indices = None
+
+        frame_idx = 0
+        max_checks = 10
+        step = 30  # fallback: check every 30th frame
 
         with FaceLandmarker.create_from_options(options) as landmarker:
-            for i in range(frame_count):
+            while frames_checked < max_checks:
                 ret, frame = cap.read()
                 if not ret:
                     break
-                if i not in sample_indices:
-                    continue
-                frames_checked += 1
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-                res = landmarker.detect(mp_img)
-                if res.face_landmarks:
-                    frames_with_face += 1
+
+                should_check = (
+                    (sample_indices is not None and frame_idx in sample_indices)
+                    or (sample_indices is None and frame_idx % step == 0)
+                )
+
+                if should_check:
+                    frames_checked += 1
+                    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+                    res = landmarker.detect(mp_img)
+                    if res.face_landmarks:
+                        frames_with_face += 1
+
+                frame_idx += 1
         cap.release()
 
     except Exception:
