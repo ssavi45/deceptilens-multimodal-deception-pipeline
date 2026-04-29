@@ -367,12 +367,22 @@ def validate_human_face(video_path: str, min_detection_ratio: float = 0.15) -> d
                 frame_idx += 1
         cap.release()
 
-    except Exception:
-        pass
+    except Exception as exc:
+        # If the pre-check itself fails, let the video through rather than
+        # blocking a potentially valid upload.  The full inference pipeline
+        # will still run its own MediaPipe extraction and surface fallback
+        # warnings in the diagnostics section.
+        return {
+            "face_detected": True,
+            "frames_checked": 0,
+            "frames_with_face": 0,
+            "detection_ratio": 0.0,
+            "error": str(exc),
+        }
 
     ratio = (frames_with_face / frames_checked) if frames_checked > 0 else 0.0
     return {
-        "face_detected": ratio >= min_detection_ratio,
+        "face_detected": ratio >= min_detection_ratio or frames_checked == 0,
         "frames_checked": frames_checked,
         "frames_with_face": frames_with_face,
         "detection_ratio": ratio,
