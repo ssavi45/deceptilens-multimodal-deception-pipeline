@@ -676,7 +676,7 @@ def render_css(theme_name: str) -> None:
 
 @st.cache_resource(show_spinner=False)
 def load_models():
-    return DeceptionEnsemble(model_dir="saved_models")
+    return DeceptionEnsemble(model_dir=str(APP_DIR / "saved_models"))
 
 
 def make_gauge(confidence: float, label: str, theme_name: str) -> go.Figure:

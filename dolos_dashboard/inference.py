@@ -18,6 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+_INFERENCE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MEDIAPIPE_BLENDSHAPE_NAMES = [
     "browDownLeft",
@@ -249,7 +250,7 @@ def _extract_mediapipe_features(video_path: str) -> list:
         FaceLandmarker    = mp.tasks.vision.FaceLandmarker
         FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
 
-        TASK_PATH = "face_landmarker.task"
+        TASK_PATH = os.path.join(_INFERENCE_DIR, "face_landmarker.task")
         if not os.path.exists(TASK_PATH):
             import urllib.request
             url = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
@@ -307,7 +308,7 @@ def validate_human_face(video_path: str, min_detection_ratio: float = 0.15) -> d
         FaceLandmarker = mp.tasks.vision.FaceLandmarker
         FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
 
-        TASK_PATH = "face_landmarker.task"
+        TASK_PATH = os.path.join(_INFERENCE_DIR, "face_landmarker.task")
         if not os.path.exists(TASK_PATH):
             import urllib.request
             url = (
