@@ -183,6 +183,64 @@ def _extract_audio_features(video_path: str) -> list:
         return [0.0] * 34
 
 
+def validate_speech_activity(
+    video_path: str,
+    min_rms: float = 0.005,
+    min_voice_ratio: float = 0.10,
+) -> dict:
+    """
+    Check whether the video contains meaningful speech audio.
+
+    Uses energy-based voice activity detection:
+      - Overall RMS must exceed `min_rms` (filters silent / near-silent clips).
+      - At least `min_voice_ratio` of short-time frames must have RMS above a
+        speech-energy threshold (filters music-only or ambient-noise clips).
+
+    Returns:
+        {
+          "speech_detected": bool,
+          "mean_rms": float,
+          "voice_activity_ratio": float,
+          "duration_seconds": float,
+        }
+    """
+    try:
+        y, sr = librosa.load(video_path, sr=16000)
+        duration = float(len(y) / sr)
+
+        if len(y) == 0 or duration < 0.5:
+            return {
+                "speech_detected": False,
+                "mean_rms": 0.0,
+                "voice_activity_ratio": 0.0,
+                "duration_seconds": duration,
+            }
+
+        rms = librosa.feature.rms(y=y)[0]
+        mean_rms = float(np.mean(rms))
+
+        # Speech energy threshold: frames with RMS above this are "voice active"
+        speech_threshold = max(min_rms, float(np.median(rms) * 1.4))
+        voice_frames = int(np.sum(rms > speech_threshold))
+        voice_ratio = float(voice_frames / len(rms)) if len(rms) > 0 else 0.0
+
+        speech_ok = mean_rms >= min_rms and voice_ratio >= min_voice_ratio
+
+        return {
+            "speech_detected": speech_ok,
+            "mean_rms": mean_rms,
+            "voice_activity_ratio": voice_ratio,
+            "duration_seconds": duration,
+        }
+    except Exception:
+        return {
+            "speech_detected": False,
+            "mean_rms": 0.0,
+            "voice_activity_ratio": 0.0,
+            "duration_seconds": 0.0,
+        }
+
+
 def _extract_mediapipe_features(video_path: str) -> list:
     """104-dimensional MediaPipe face blendshape features."""
     try:
@@ -225,6 +283,82 @@ def _extract_mediapipe_features(video_path: str) -> list:
         pass
 
     return [0.0] * 104
+
+
+def validate_human_face(video_path: str, min_detection_ratio: float = 0.15) -> dict:
+    """
+    Fast pre-check: sample ~10 evenly spaced frames and verify that at least
+    `min_detection_ratio` of them contain a detectable human face.
+
+    Returns:
+        {
+          "face_detected": bool,
+          "frames_checked": int,
+          "frames_with_face": int,
+          "detection_ratio": float,
+        }
+    """
+    frames_checked = 0
+    frames_with_face = 0
+
+    try:
+        import mediapipe as mp
+        BaseOptions = mp.tasks.BaseOptions
+        FaceLandmarker = mp.tasks.vision.FaceLandmarker
+        FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
+
+        TASK_PATH = "face_landmarker.task"
+        if not os.path.exists(TASK_PATH):
+            import urllib.request
+            url = (
+                "https://storage.googleapis.com/mediapipe-models/"
+                "face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+            )
+            urllib.request.urlretrieve(url, TASK_PATH)
+
+        options = FaceLandmarkerOptions(
+            base_options=BaseOptions(model_asset_path=TASK_PATH),
+            output_face_blendshapes=False,
+        )
+
+        cap = cv2.VideoCapture(video_path)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if frame_count <= 0:
+            cap.release()
+            return {
+                "face_detected": False,
+                "frames_checked": 0,
+                "frames_with_face": 0,
+                "detection_ratio": 0.0,
+            }
+
+        sample_indices = set(np.linspace(0, max(0, frame_count - 1), 10, dtype=int))
+
+        with FaceLandmarker.create_from_options(options) as landmarker:
+            for i in range(frame_count):
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                if i not in sample_indices:
+                    continue
+                frames_checked += 1
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+                res = landmarker.detect(mp_img)
+                if res.face_landmarks:
+                    frames_with_face += 1
+        cap.release()
+
+    except Exception:
+        pass
+
+    ratio = (frames_with_face / frames_checked) if frames_checked > 0 else 0.0
+    return {
+        "face_detected": ratio >= min_detection_ratio,
+        "frames_checked": frames_checked,
+        "frames_with_face": frames_with_face,
+        "detection_ratio": ratio,
+    }
 
 
 def _extract_resnet_features(video_path: str) -> list:

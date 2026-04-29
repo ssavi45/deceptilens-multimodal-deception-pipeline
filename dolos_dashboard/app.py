@@ -12,7 +12,7 @@ import time
 import plotly.graph_objects as go
 import streamlit as st
 
-from inference import DeceptionEnsemble, predict
+from inference import DeceptionEnsemble, predict, validate_human_face, validate_speech_activity
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -1103,6 +1103,54 @@ with workflow_right:
 
     if uploaded and tmp_path:
         pipeline_slot = st.empty()
+        pipeline_slot.markdown(
+            pipeline_card("Validating human subject", 5), unsafe_allow_html=True
+        )
+
+        with st.spinner("Checking for a human face in the video…"):
+            face_check = validate_human_face(tmp_path)
+
+        if not face_check["face_detected"]:
+            pipeline_slot.empty()
+            os.unlink(tmp_path)
+            status_strip(
+                "error",
+                "No human face detected",
+                f"Scanned {face_check['frames_checked']} frames — "
+                f"found a face in {face_check['frames_with_face']} "
+                f"({face_check['detection_ratio'] * 100:.0f}%). "
+                "DeceptiLens requires a clearly visible human subject.",
+            )
+            st.info(
+                "Upload a video that contains a frontal view of a human face "
+                "with audible speech for accurate deception analysis."
+            )
+            st.stop()
+
+        pipeline_slot.markdown(
+            pipeline_card("Checking for speech activity", 10), unsafe_allow_html=True
+        )
+
+        with st.spinner("Analyzing audio for speech activity…"):
+            speech_check = validate_speech_activity(tmp_path)
+
+        if not speech_check["speech_detected"]:
+            pipeline_slot.empty()
+            os.unlink(tmp_path)
+            status_strip(
+                "error",
+                "No speech detected",
+                f"Audio duration: {speech_check['duration_seconds']:.1f}s | "
+                f"Mean energy: {speech_check['mean_rms']:.4f} | "
+                f"Voice activity: {speech_check['voice_activity_ratio'] * 100:.0f}%. "
+                "DeceptiLens requires audible speech to analyze deception cues.",
+            )
+            st.info(
+                "Upload a video where a person is clearly speaking — "
+                "interview clips, trial recordings, or statement videos work best."
+            )
+            st.stop()
+
         stages = [
             ("Extracting acoustic features", 20),
             ("Running face blendshape analysis", 45),
