@@ -2,3 +2,4 @@ libgl1
 libglib2.0-0t64
 ffmpeg
 libgles2
+libegl1
