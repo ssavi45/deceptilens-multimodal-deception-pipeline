@@ -162,6 +162,63 @@ def svg_icon(name: str) -> str:
           <path d="M6.5 5.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
         </svg>
         """,
+        "accuracy": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        """,
+        "decision_stack": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 4L4.5 8 12 12 19.5 8Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7"/>
+          <path d="M4.5 12L12 16l7.5-4" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7"/>
+          <path d="M4.5 16L12 20l7.5-4" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7"/>
+        </svg>
+        """,
+        "feature_space": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2 12c2-4 4-7 5.5-7s3.5 6 5.5 7 3.5-7 5.5-7 3.5 3 5.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        """,
+        "primary_use": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M10 9l5 3-5 3V9Z" fill="currentColor"/>
+        </svg>
+        """,
+        "cloud_upload": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V10M9 12l3-3 3 3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"/>
+        </svg>
+        """,
+        "feature_extract": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"/>
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+        """,
+        "decision_layer": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3L4 9v6l8 6 8-6V9l-8-6Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.7"/>
+          <path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"/>
+        </svg>
+        """,
+        "validation_icon": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 18.5h14M7.5 15.5V11M12 15.5V7M16.5 15.5V9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"/>
+          <rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        """,
+        "file_icon": """
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="4" cy="12" r="1.2" fill="currentColor"/>
+          <circle cx="8" cy="12" r="1.2" fill="currentColor"/>
+          <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+        </svg>
+        """,
     }
     return "".join(line.strip() for line in icons[name].splitlines())
 
@@ -293,7 +350,7 @@ def render_css(theme_name: str) -> None:
           .status-strip {{
             background: {palette["surface"]};
             border: 1px solid {palette["border"]};
-            border-radius: 8px;
+            border-radius: 16px;
             box-shadow: {palette["shadow"]};
           }}
 
@@ -301,8 +358,33 @@ def render_css(theme_name: str) -> None:
           .info-card,
           .summary-card,
           .metric-card {{
-            padding: 0.9rem 1rem;
+            padding: 1.1rem 1.2rem;
             min-height: 96px;
+          }}
+
+          .stat-card {{
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            height: 150px;
+          }}
+
+          .stat-icon-badge {{
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: {palette["accent"]};
+            background: {palette["accent_soft"]};
+            flex: 0 0 auto;
+          }}
+
+          .stat-icon-badge svg {{
+            width: 24px;
+            height: 24px;
           }}
 
           .stat-label,
@@ -473,7 +555,7 @@ def render_css(theme_name: str) -> None:
             align-items: center;
             gap: 0.85rem;
             padding: 0.95rem 1rem;
-            margin: 0.5rem 0 0.9rem 0;
+            margin: 2rem 0 0.5rem 0;
           }}
 
           .status-ready .status-icon {{
@@ -668,6 +750,196 @@ def render_css(theme_name: str) -> None:
             line-height: 1.6;
             padding: 0.15rem 0 0 0;
           }}
+
+          /* ── Summary row cards (system summary section) ── */
+          .summary-row-card {{
+            background: {palette["surface"]};
+            border: 1px solid {palette["border"]};
+            border-radius: 16px;
+            box-shadow: {palette["shadow"]};
+            padding: 1.05rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+          }}
+
+          .summary-row-icon {{
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex: 0 0 auto;
+          }}
+
+          .summary-row-icon svg {{
+            width: 22px;
+            height: 22px;
+          }}
+
+          .summary-row-label {{
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.1rem;
+          }}
+
+          .summary-row-title {{
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.2rem;
+          }}
+
+          .summary-row-copy {{
+            color: {palette["muted"]};
+            font-size: 0.86rem;
+            line-height: 1.45;
+          }}
+
+          /* ── Custom upload zone ── */
+          .upload-zone {{
+            border: 2px dashed {palette["border"]};
+            border-bottom: none;
+            border-radius: 16px 16px 0 0;
+            padding: 2.2rem 1.5rem 0.5rem 1.5rem;
+            text-align: center;
+            background: {palette["surface"]};
+            margin: 0.5rem 0 0 0;
+          }}
+
+          .upload-cloud-icon {{
+            width: 56px;
+            height: 56px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: {palette["accent"]};
+            margin: 0 auto 0.8rem auto;
+          }}
+
+          .upload-cloud-icon svg {{
+            width: 48px;
+            height: 48px;
+          }}
+
+          .upload-text {{
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+          }}
+
+          .upload-or {{
+            color: {palette["muted"]};
+            font-size: 0.88rem;
+            margin-bottom: 0.7rem;
+          }}
+
+          .upload-choose-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: {palette["accent"]};
+            color: #ffffff;
+            border: none;
+            border-radius: 24px;
+            padding: 0.65rem 1.6rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+          }}
+
+          .upload-choose-btn svg {{
+            width: 16px;
+            height: 16px;
+          }}
+
+          .upload-formats {{
+            color: {palette["muted"]};
+            font-size: 0.82rem;
+            margin-top: 0.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+          }}
+
+          .upload-formats svg {{
+            width: 14px;
+            height: 14px;
+            vertical-align: -2px;
+            margin-right: 3px;
+          }}
+
+          /* ── Purchase button ── */
+          .purchase-link {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: {palette["surface"]};
+            color: {palette["accent"]};
+            border: 1px solid {palette["accent"]};
+            border-radius: 24px;
+            padding: 0 1.15rem;
+            height: 42px;
+            box-sizing: border-box;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 200ms ease;
+            white-space: nowrap;
+          }}
+
+          .purchase-link:hover {{
+            background: {palette["accent_soft"]};
+          }}
+
+          .purchase-link svg {{
+            width: 16px;
+            height: 16px;
+          }}
+
+          /* ── Kebab menu ── */
+          .kebab-btn {{
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid {palette["border"]};
+            background: {palette["surface"]};
+            color: {palette["muted"]};
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+          }}
+
+          /* ── System summary section title ── */
+          .summary-section-head {{
+            margin-bottom: 0.6rem;
+          }}
+
+          .summary-section-title {{
+            font-size: 1.18rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+          }}
+
+          .summary-section-copy {{
+            color: {palette["muted"]};
+            font-size: 0.92rem;
+            line-height: 1.5;
+          }}
+
         </style>
         """,
         unsafe_allow_html=True,
@@ -880,13 +1152,36 @@ def summary_card(label: str, title: str, copy: str, featured: bool = False) -> N
     )
 
 
-def stat_card(label: str, value: str, copy: str) -> None:
+def stat_card(label: str, value: str, copy: str, icon: str = "") -> None:
+    icon_html = f'<div class="stat-icon-badge">{svg_icon(icon)}</div>' if icon else ""
     st.markdown(
         f"""
         <div class="stat-card">
-          <div class="stat-label">{label}</div>
-          <div class="stat-value">{value}</div>
-          <div class="stat-copy">{copy}</div>
+          {icon_html}
+          <div class="stat-card-text">
+            <div class="stat-label">{label}</div>
+            <div class="stat-value">{value}</div>
+            <div class="stat-copy">{copy}</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def summary_row_card(label: str, label_color: str, title: str, copy: str, icon: str) -> None:
+    bg_color = label_color + "18"
+    st.markdown(
+        f"""
+        <div class="summary-row-card">
+          <div class="summary-row-icon" style="color: {label_color}; background: {bg_color};">
+            {svg_icon(icon)}
+          </div>
+          <div>
+            <div class="summary-row-label" style="color: {label_color};">{label}</div>
+            <div class="summary-row-title">{title}</div>
+            <div class="summary-row-copy">{copy}</div>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -974,14 +1269,16 @@ def status_strip(kind: str, title: str, copy: str) -> None:
 
 
 if "theme_name" not in st.session_state:
-    st.session_state.theme_name = "dark"
+    st.session_state.theme_name = "light"
 
 theme_name = st.session_state.theme_name
 render_css(theme_name)
 theme_label, next_theme = theme_button_config(theme_name)
 
 
-toolbar_left, toolbar_right = st.columns([6.5, 1.5], vertical_alignment="center")
+toolbar_left, toolbar_right = st.columns(
+    [6, 3.25], vertical_alignment="center"
+)
 
 with toolbar_left:
     st.markdown(
@@ -1002,24 +1299,38 @@ with toolbar_left:
     )
 
 with toolbar_right:
-    if st.button(
-        theme_label,
-        key="theme_switch",
-        use_container_width=True,
-    ):
-        st.session_state.theme_name = next_theme
-        st.rerun()
+    toolbar_purchase, toolbar_theme = st.columns(
+        [2, 1], gap="small", vertical_alignment="center"
+    )
+    with toolbar_purchase:
+        st.markdown(
+            '<div style="display: flex; justify-content: flex-end; align-items: center; height: 42px; transform: translateY(-8px);">'
+            '<a href="https://deceptilens-enterprise.vercel.app/" target="_blank" class="purchase-link">'
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/>'
+            '</svg>&nbsp;Purchase specialized service</a></div>',
+            unsafe_allow_html=True,
+        )
+
+    with toolbar_theme:
+        if st.button(
+            theme_label,
+            key="theme_switch",
+            use_container_width=True,
+        ):
+            st.session_state.theme_name = next_theme
+            st.rerun()
 
 
 hero_stats = st.columns(4, gap="medium")
 with hero_stats[0]:
-    stat_card("Reported Accuracy", "81.27%", "Mean accuracy across 10-fold cross-validation.")
+    stat_card("Reported Accuracy", "81.27%", "Mean accuracy across 10-fold cross-validation.", icon="accuracy")
 with hero_stats[1]:
-    stat_card("Decision Stack", "4 Models", "PyTorch, HGB, SVM, and Random Forest voting ensemble.")
+    stat_card("Decision Stack", "4 Models", "PyTorch, HGB, SVM, and Random Forest voting ensemble.", icon="decision_stack")
 with hero_stats[2]:
-    stat_card("Feature Space", "650 Dims", "ResNet-18, MediaPipe blendshapes, and Librosa audio features.")
+    stat_card("Feature Space", "650 Dims", "ResNet-18, MediaPipe blendshapes, and Librosa audio features.", icon="feature_space")
 with hero_stats[3]:
-    stat_card("Primary Use", "Clip Review", "Single-video analysis with per-model probabilities and local XAI.")
+    stat_card("Primary Use", "Clip Review", "Single-video analysis with per-model probabilities and local XAI.", icon="primary_use")
 
 
 with st.spinner("Loading saved models..."):
@@ -1043,6 +1354,7 @@ status_strip(
 st.divider()
 
 workflow_left, workflow_right = st.columns([1.18, 0.9], gap="large")
+palette = THEMES[theme_name]
 
 with workflow_left:
     section_heading(
@@ -1050,13 +1362,62 @@ with workflow_left:
         "Upload a video clip for inference. Supported formats: mp4, avi, mov, mkv.",
         "upload",
     )
+    
+    upload_placeholder = st.empty()
+    
     uploaded = st.file_uploader(
         "Select a video clip",
-        type=["mp4", "avi", "mov", "mkv"],
+        type=["mp4", "avi", "mov", "mkv", "mpeg4"],
         help="For best results use a clear face view, stable framing, and 5 to 30 seconds of speech.",
         label_visibility="collapsed",
     )
-    st.caption("Recommended: frontal face visibility, audible speech, and moderate clip length.")
+    
+    if uploaded is None:
+        upload_placeholder.markdown(
+            f"""
+            <style>
+              [data-testid="stFileUploader"] {{
+                margin-top: -1.2rem;
+              }}
+              [data-testid="stFileUploader"] > section {{
+                padding: 0 1.5rem 1.5rem 1.5rem !important;
+                border: 2px dashed {palette["border"]} !important;
+                border-top: none !important;
+                border-radius: 0 0 16px 16px !important;
+                background: {palette["surface"]} !important;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+              }}
+              [data-testid="stFileUploader"] label {{
+                display: none !important;
+              }}
+              [data-testid="stFileUploaderDropzone"] > svg,
+              [data-testid="stFileUploaderDropzone"] > div,
+              [data-testid="stFileUploaderDropzone"] > small {{
+                display: none !important;
+              }}
+            </style>
+            <div class="upload-zone">
+              <div class="upload-cloud-icon">{svg_icon("cloud_upload")}</div>
+              <div class="upload-text">Drag & drop a video file here</div>
+              <div class="upload-or">or</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown(
+        """
+        <div style="text-align: center; color: #a0a0a0; font-size: 0.85rem; margin-top: 0.5rem;">
+          <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 0.3rem;">
+            <span>📄 Supported: MP4, AVI, MOV, MKV, MPEG4</span>
+            <span>Max file size: 200MB per file</span>
+          </div>
+          <div>ⓘ Recommended: frontal face visibility, audible speech, and moderate clip length.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 tmp_path = None
 result = None
@@ -1076,29 +1437,37 @@ with workflow_left:
         st.video(tmp_path)
 
 with workflow_right:
-    section_heading(
-        "System Summary",
-        "The dashboard combines feature extraction, ensemble inference, and explanation outputs.",
-        "stack",
+    st.markdown(
+        f"""
+        <div class="summary-section-head">
+          <div class="summary-section-title">System Summary</div>
+          <div class="summary-section-copy">
+            The dashboard combines feature extraction, ensemble inference, and explanation outputs.
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-    summary_top = st.columns(2, gap="medium")
-    with summary_top[0]:
-        summary_card(
-            "Feature Extraction",
-            "ResNet-18 + MediaPipe + Librosa",
-            "Visual embeddings, face blendshape statistics, and acoustic descriptors are fused into one feature vector.",
-        )
-    with summary_top[1]:
-        summary_card(
-            "Decision Layer",
-            "Voting Ensemble",
-            "The PyTorch dual-stream model leads the score while the full ensemble determines the final verdict.",
-        )
-    summary_card(
+    summary_row_card(
+        "Feature Extraction",
+        palette["accent"],
+        "ResNet-18 + MediaPipe + Librosa",
+        "Visual embeddings, face blendshape statistics, and acoustic descriptors are fused into one feature vector.",
+        "feature_extract",
+    )
+    summary_row_card(
+        "Decision Layer",
+        palette["success"],
+        "Voting Ensemble",
+        "The PyTorch dual-stream model leads the score while the full ensemble determines the final verdict.",
+        "decision_layer",
+    )
+    summary_row_card(
         "Validation",
+        palette["accent"],
         "10-Fold Cross-Validation",
         "Reported mean accuracy: 81.27% across the evaluation folds.",
-        featured=True,
+        "validation_icon",
     )
 
     if uploaded and tmp_path:
@@ -1380,10 +1749,14 @@ elif not uploaded:
 
 st.divider()
 st.markdown(
-    """
-    <div class="footer-copy">
-      DeceptiLens | Ensemble: PyTorch Dual-Stream, HistGradientBoosting, Support Vector Machine, Random Forest |
-      Feature stack: ResNet-18, MediaPipe, Librosa | Reported 10-fold cross-validation mean accuracy: 81.27%
+    f"""
+    <div style="text-align: center; margin-top: 1.5rem; padding-bottom: 2rem;">
+      <div style="font-size: 1.4rem; font-weight: 600; color: {palette['text']}; margin-bottom: 0.8rem; display: flex; justify-content: center; align-items: center; gap: 0.6rem;">
+        DeceptiLens <span style="font-size: 0.65rem; font-weight: 700; background: {palette['border']}; color: {palette['text']}; padding: 0.3rem 0.5rem; border-radius: 4px; letter-spacing: 0.5px;">ENTERPRISE</span>
+      </div>
+      <div style="color: {palette['muted']}; font-size: 0.95rem;">
+        © 2026 DeceptiLens. Democratizing behavioral analysis.
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
