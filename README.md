@@ -1,5 +1,7 @@
-```markdown
 # DeceptiLens: A Multimodal Ensemble Framework for Deception Detection
+
+[![Architecture Notes](#core-architecture-and-pipeline-design)](https://img.shields.io/badge/Architecture-Notes-blue?style=for-the-badge)
+[![Academic Paper Submission](#credits-and-citation)](https://img.shields.io/badge/Academic-Report-orange?style=for-the-badge)
 
 DeceptiLens is a production-grade multimodal machine learning framework designed to classify video assertions as truthful or deceptive. The system processes raw video inputs through isolated behavioral, acoustic, and deep spatial feature extraction pipelines, fusing them into a 650-dimensional joint vector. Classification is driven by a custom PyTorch Dual-Stream Cross-Attention network operating within a regularized, heterogeneous hard-voting ensemble.
 
@@ -49,10 +51,6 @@ graph TD
     
     K --> L[Final Classification Probability Output]
     I --> M[SHAP TreeExplainer Interpretability Layer]
-
-```
-
----
 
 ## Technical Modality Specifications
 
@@ -253,17 +251,17 @@ streamlit run app.py
 
 ## Credits and Citation
 
-This framework was designed and implemented by **Shoumik Sarkar**, **Sumon Das**, and **Khandaker Anjuman Parvez** under the supervision of **Dr. Sifat Momen** (Professor within the ECE Department at North South University).
+This framework was designed and implemented by **Shoumik Sarkar**, and **Sumon Das** under the supervision of **Dr. Sifat Momen** (Professor within the ECE Department at North South University).
 
 ### Project Citations
 
 ```r
 @techreport{sarkar2026deceptilens,
-  author      = {Sarkar, Shoumik and Das, Sumon and Parvez, Khandaker Anjuman},
+  author      = {Shoumik Sarkar, Sumon Das},
   title       = {DeceptiLens: A Multimodal Ensemble Framework for Deception Detection Using Behavioral Features and Deep Visual Embeddings with Cross-Domain Evaluation},
   institution = {North South University, Department of Electrical and Computer Engineering},
   year        = {2026},
-  type        = {Senior Design Project Report}
+  type        = {Senior Design Project}
 }
 
 ```
