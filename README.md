@@ -1,3 +1,4 @@
+```markdown
 # DeceptiLens: A Multimodal Ensemble Framework for Deception Detection
 
 [![Architecture Notes](#core-architecture-and-pipeline-design)](https://img.shields.io/badge/Architecture-Notes-blue?style=for-the-badge)
@@ -51,6 +52,10 @@ graph TD
     
     K --> L[Final Classification Probability Output]
     I --> M[SHAP TreeExplainer Interpretability Layer]
+
+```
+
+---
 
 ## Technical Modality Specifications
 
@@ -251,7 +256,7 @@ streamlit run app.py
 
 ## Credits and Citation
 
-This framework was designed and implemented by **Shoumik Sarkar**, and **Sumon Das** under the supervision of **Dr. Sifat Momen** (Professor within the ECE Department at North South University).
+This framework was designed and implemented by **Shoumik Sarkar**, and **Sumon Das**, under the supervision of **Dr. Sifat Momen** (Professor within the ECE Department at North South University).
 
 ### Project Citations
 
@@ -263,5 +268,9 @@ This framework was designed and implemented by **Shoumik Sarkar**, and **Sumon D
   year        = {2026},
   type        = {Senior Design Project}
 }
+
+```
+
+```
 
 ```
