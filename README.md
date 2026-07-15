@@ -266,7 +266,3 @@ This framework was designed and implemented by **Shoumik Sarkar**, and **Sumon D
 }
 
 ```
-
-```
-
-```
