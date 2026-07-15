@@ -1,10 +1,6 @@
-```markdown
 # DeceptiLens: A Multimodal Ensemble Framework for Deception Detection
 
-[![Architecture Notes](#core-architecture-and-pipeline-design)](https://img.shields.io/badge/Architecture-Notes-blue?style=for-the-badge)
-[![Academic Paper Submission](#credits-and-citation)](https://img.shields.io/badge/Academic-Report-orange?style=for-the-badge)
-
-DeceptiLens is a production-grade multimodal machine learning framework designed to classify video assertions as truthful or deceptive. The system processes raw video inputs through isolated behavioral, acoustic, and deep spatial feature extraction pipelines, fusing them into a 650-dimensional joint vector. Classification is driven by a custom PyTorch Dual-Stream Cross-Attention network operating within a regularized, heterogeneous hard-voting ensemble.
+**DeceptiLens** is a production-grade multimodal machine learning framework designed to classify video assertions as truthful or deceptive. The system processes raw video inputs through isolated behavioral, acoustic, and deep spatial feature extraction pipelines, fusing them into a 650-dimensional joint vector. Classification is driven by a custom PyTorch Dual-Stream Cross-Attention network operating within a regularized, heterogeneous hard-voting ensemble.
 
 Developed as part of a Senior Design Project at North South University, this framework moves past simple decision-level video fusion to learn structural cross-modal dependencies while enforcing strict CPU-deployable latency constraints.
 
